@@ -22,37 +22,7 @@ import json
 #
 # # С вибрацией и увеличенной интенсивностью
 # MandreUI.ripple(intensity=2.0, vibrate=True)
-# class Data_Base(MandreData):
-#
-#     def __init__(self, id):
-#         super().__init__()
-#         self.id = id
-#         self.__data ={}
-#         try:
-#             self.__data = MandreData.read_persistent_json(
-#                 self.id,
-#                 "database.json",
-#                 default={"settings": {}}
-#             )
-#             BulletinHelper.show_success("Загружен гол!")
-#
-#         except:
-#             self.__data= {
-#                 "settings": {
-#                     "host_url": "http://10.28.250.29:8000",
-#                     "token": "",
-#                     "safe_mode": True,
-#                     "time_out": 60,
-#                     "current_tab": 1,
-#                 },
-#             }
-#             self.save()
-#     def save(self):
-#         MandreData.write_persistent_json(self.id, "database.json", self.__data)
-#         BulletinHelper.show_success("Плагин!")
-#
-#     def get_url(self):
-#         return self.__data["settings"]["host_url"]
+
 class User():
     def __init__(self, name:str, tg_id:int):
         self.name = name
@@ -63,7 +33,7 @@ class Group():
         self.description = description
         self.users = []
 class CloudBase():
-    def __init__(self,plugin:GOVNO1):
+    def __init__(self,plugin:BasePlugin):
         self.url=plugin.set_setting("url", "http://10.28.250.29:8000")
     def create_user(self, user:User):
         response = requests.post(self.url+"/groups/user", json= user.__dict__)
@@ -76,7 +46,7 @@ class CloudBase():
         if response.status_code == 200:
             return response.json()["id"]
         return None
-    def get_users(self, group_id:int):
+    def get_users(self, group_id = -1):
         response = requests.get(self.url+"/groups/users", params={"group_id": group_id})
         if response.status_code == 200:
             return response.json()
@@ -154,14 +124,14 @@ class GOVNO1(BasePlugin):
     def on_send_message_hook(self, account: int, params: Any) -> HookResult:
         return Mandre.handle_outgoing_command(params) or HookResult()
 
-    # def show_menu(self):
-    #     MandreUI.show(
-    #         title="Выберите действие",
-    #         items=["Первое", "Второе", "Третье"],
-    #         on_select=lambda index, text: BulletinHelper.show_success(f"Вы выбрали: {text}"),
-    #         message="Какой вариант вам нравится?",
-    #         cancel_text="Отмена"
-    #     )
+    def show_menu(self):
+        MandreUI.show(
+            title="Выберите действие",
+            items=["Первое", "Второе", "Третье"],
+            on_select=lambda index, text: BulletinHelper.show_success(f"Вы выбрали: {text}"),
+            message="Какой вариант вам нравится?",
+            cancel_text="Отмена"
+        )
 
 
     def create_settings(self):
@@ -169,12 +139,12 @@ class GOVNO1(BasePlugin):
 
         if tab == 0:  # Основные
             return [
-                # Header(text="Основные настройки"),
-                # Text(
-                #     text="Выбрать чат",
-                #     icon="msg_select",
-                #     on_click=lambda _: self.show_menu(),
-                # )
+                Header(text="Основные настройки"),
+                Text(
+                    text="Выбрать чат",
+                    icon="msg_select",
+                    on_click=lambda _: self.show_menu(),
+                )
             ]
         elif tab == 1:  # Данные
             return [
