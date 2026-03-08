@@ -15,13 +15,6 @@ from ui.bulletin import BulletinHelper
 from mandre_lib import MandreUI
 from ui.settings import Header, Text, Switch, Divider, Input
 from requests import get, post
-from mandre_lib import MandreData
-import json
-# Простой ripple в центре экрана
-# MandreUI.ripple()
-#
-# # С вибрацией и увеличенной интенсивностью
-# MandreUI.ripple(intensity=2.0, vibrate=True)
 
 class User():
     def __init__(self, name:str, tg_id:int):
@@ -34,7 +27,7 @@ class Group():
         self.users = []
 class CloudBase():
     def __init__(self,plugin:BasePlugin):
-        self.url=plugin.set_setting("url", "http://10.28.250.29:8000")
+        self.url=plugin.get_setting("url", "http://10.28.250.29:8000")
     def create_user(self, user:User):
         response = requests.post(self.url+"/groups/user", json= user.__dict__)
         if response.status_code == 200:
@@ -124,7 +117,7 @@ class GOVNO1(BasePlugin):
     def on_send_message_hook(self, account: int, params: Any) -> HookResult:
         return Mandre.handle_outgoing_command(params) or HookResult()
 
-    def show_menu(self):
+    def show_user(self):
         MandreUI.show(
             title="Выберите действие",
             items=["Первое", "Второе", "Третье"],
@@ -132,7 +125,6 @@ class GOVNO1(BasePlugin):
             message="Какой вариант вам нравится?",
             cancel_text="Отмена"
         )
-
 
     def create_settings(self):
         tab = self.get_setting("current_tab", 1)
@@ -143,25 +135,29 @@ class GOVNO1(BasePlugin):
                 Text(
                     text="Выбрать чат",
                     icon="msg_select",
-                    on_click=lambda _: self.show_menu(),
-                )
-            ]
-        elif tab == 1:  # Данные
-            return [
-                Header(text="Управление данными"),
-                Text(
-                    text="Экспортировать",
-                    icon="msg_shareout",
-                    # on_click=lambda _: self.export_data()
+                    on_click=lambda _: self.show_user(),
                 ),
-                Text(
-                    text="Импортировать",
-                    icon="msg_input",
-                    # on_click=lambda _: self.import_data()
+                Header(text="Основные настройки"),
+                Input(
+                    key="url_input_key",
+                    text="Сменить аддрес",
+                    default=self.get_setting(key="url", default="0.0.0.0"),
+                    subtext="Текущий аддрес: " + str(self.get_setting(key="url", default="0.0.0.0")),
+                    icon="msg_text",
+                    on_change=self._change_url
                 ),
                 Divider(),
             ]
+        elif tab == 1:  # Данные
+            return [
+
+            ]
         return None
+
+    def _change_url(self,url:str):
+        self.set_setting(key="url", value=url)
+        Mandre.apply_and_refresh_settings(self)
+
     def add_user2group_cmd(self, plugin, args:str, params):
 
         try:
