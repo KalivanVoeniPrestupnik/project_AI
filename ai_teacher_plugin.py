@@ -1,80 +1,132 @@
-__id__ = "my_packet_govna"
-__name__ = "ПАкет говна"
+__id__ = "my_packet_s_packetami"
+__name__ = "Помошник"
 __version__ = "1.0"
 __author__ = "@Sharashkinsss"
-__description__ = "Говёный плагин с MandreLib"
+__description__ = "Помощь под рукой"
 __min_version__ = "11.9.0"
 
-from http.client import responses
 from typing import Any
-
 import requests
 from base_plugin import BasePlugin, HookResult, HookStrategy
 from mandre_lib import Mandre, Color
 from ui.bulletin import BulletinHelper
 from mandre_lib import MandreUI
 from ui.settings import Header, Text, Switch, Divider, Input
-from requests import get, post
+
+
+
 
 class User():
+    """
+    Класс пользователя
+    """
     def __init__(self, name:str, tg_id:int):
         self.name = name
         self.tg_id = tg_id
 class Group():
+    """
+    Класс групп
+    """
     def __init__(self, name:str, description:str):
         self.name = name
         self.description = description
         self.users = []
 class CloudBase():
+    """
+    Класс облачной базы данных
+    """
     def __init__(self,plugin:BasePlugin):
+        """
+        Метод получения url из настроек плагина
+        :param plugin:
+        """
         self.url=plugin.get_setting("url", "http://10.28.250.29:8000")
     def create_user(self, user:User):
+        """
+        Метод создания пользователя
+        :param user:
+        :return id:
+        """
         response = requests.post(self.url+"/groups/user", json= user.__dict__)
         if response.status_code == 200:
             return response.json()["id"]
         return None
 
     def create_group(self, group:Group):
+        """
+        Метод создания пользователя
+        :param group:
+        :return id:
+        """
         response = requests.post(self.url+"/groups/group", json=group.__dict__)
         if response.status_code == 200:
             return response.json()["id"]
         return None
-    def get_users(self, group_id = -1):
+    def get_users(self, group_id):
+        """
+        Метод получения всех пользователей по group_id
+        :param group_id:
+        :return json:
+        """
         response = requests.get(self.url+"/groups/users", params={"group_id": group_id})
         if response.status_code == 200:
             return response.json()
         return None
     def get_groups(self):
+        """
+        Метод получения всех групп
+        :return json:
+        """
         response = requests.get(self.url+"/groups/groups")
         if response.status_code == 200:
             return response.json()
         return None
     def link_user_to_group(self,user_id:int, group_id:int):
+        """
+        Метод присоединения пользователя к группе
+        :param user_id, group_id:
+        :return str:
+        """
         response = requests.post(self.url+"/groups/link_to_group",json={"group_id": group_id, "user_id": user_id})
         if response.status_code == 200:
-            return "Xyek"
+            return "Успешное поключение"
         return None
     def delete_user(self,user_id:int):
+        """
+        Метод удаления пользователя
+        :param user_id:
+        :return str:
+        """
         response = requests.post(self.url+"/groups/delete/user",json={"user_id": user_id})
         if response.status_code == 200:
-            return "Группа удалена нахуй по причине слива Даши Корейки"
+            return "Пользователь удалён"
         return None
 
     def delete_group(self, group_id: int):
+        """
+        Метод удаления группы
+        :param group_id:
+        :return str:
+        """
         response = requests.post(self.url + "/groups/delete/group", json={"group_id": group_id})
         if response.status_code == 200:
-            return "Группа удалена нахуй по причине слива Даши Корейки"
+            return "Группа успешно удалена"
         return None
 
     def delete_link(self, group_id: int, user_id: int):
+        """
+        Метод удаления пользователя из группы
+        :param user_id, group_id:
+        :return str:
+        """
         response = requests.post(self.url + "/groups/delete/user", json={"group_id": group_id, "user_id": user_id})
         if response.status_code == 200:
             return "Успешно кикнут с сервера за гнилой базар"
         return None
 
-class GOVNO1(BasePlugin):
+class AITEACHER(BasePlugin):
     def on_plugin_load(self):
-        # Активируем персистентное хранилище
+
         Mandre.use_persistent_storage(self)
 
         self.add_on_send_message_hook()
@@ -126,17 +178,12 @@ class GOVNO1(BasePlugin):
             cancel_text="Отмена"
         )
 
+
     def create_settings(self):
         tab = self.get_setting("current_tab", 1)
 
         if tab == 0:  # Основные
             return [
-                Header(text="Основные настройки"),
-                Text(
-                    text="Выбрать чат",
-                    icon="msg_select",
-                    on_click=lambda _: self.show_user(),
-                ),
                 Header(text="Основные настройки"),
                 Input(
                     key="url_input_key",
@@ -147,11 +194,30 @@ class GOVNO1(BasePlugin):
                     on_change=self._change_url
                 ),
                 Divider(),
+                Text(
+                    text= "f'<a href=https://ollama.com/search>{text}</a>",
+
+                )
             ]
         elif tab == 1:  # Данные
             return [
-
+                Header(text="Добавление пользователя"),
+                Text(
+                    text="группа",
+                    icon="msg_select",
+                    on_click=lambda _: self.switch_tab(2),
+                ),
             ]
+        elif tab == 2:  #
+            for i in range(5):
+                return [
+                    Header(text="Добавление пользователей"),
+                    Text(
+                        text="Выбрать чат",
+                        icon="msg_select",
+                        on_click=lambda _: self.show_user(),
+                    ),
+                ]
         return None
 
     def _change_url(self,url:str):
